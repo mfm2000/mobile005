@@ -1,0 +1,28 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.Mobile005" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    </style>
+
+    <style name="Theme.Mobile005" parent="Base.Theme.Mobile005" />
+    <!-- Splash Screen 테마 -->
+    <style name="Theme.Mobile005.Starting"
+        parent="Theme.SplashScreen">
+
+        <!-- 배경색 -->
+        <item name="windowSplashScreenBackground">@color/white</item>
+
+        <!-- Splash 로고 -->
+        <item name="windowSplashScreenAnimatedIcon">
+            @drawable/mfm2000bi
+        </item>
+
+        <!-- Splash 종료 후 적용될 테마 -->
+        <item name="postSplashScreenTheme">
+            @style/Theme.Mobile005
+        </item>
+
+    </style>
+
+</resources>
