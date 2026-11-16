@@ -50,6 +50,60 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- 년주 및 양력/음력 날짜 표시 -->
+    <LinearLayout
+        android:id="@+id/dateContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        app:layout_constraintTop_toBottomOf="@id/analogClock"
+        app:layout_constraintBottom_toTopOf="@id/guidelineBottom"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.5">
+
+        <!-- 한글(한자) 년주 -->
+        <TextView
+            android:id="@+id/yearGapjaView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@android:color/white"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:shadowColor="#000000"
+            android:shadowRadius="6"
+            android:shadowDx="2"
+            android:shadowDy="2" />
+
+        <!-- 양력 또는 음력 날짜 -->
+        <TextView
+            android:id="@+id/dateView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@android:color/white"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:shadowColor="#000000"
+            android:shadowRadius="6"
+            android:shadowDx="2"
+            android:shadowDy="2" />
+        <TextView
+            android:id="@+id/weekdayView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="월요일"
+            android:textSize="40sp"
+            android:textColor="@android:color/white"
+            android:gravity="center" />
+    </LinearLayout>
+
     <!-- 디지털 시계 위치 -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guidelineBottom"
@@ -128,5 +182,24 @@
         android:layout_marginEnd="40dp"
         app:layout_constraintBottom_toTopOf="@id/guideline15"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 알람 설정 버튼 -->
+    <Button
+        android:id="@+id/btnRecentApps"
+        android:layout_width="150dp"
+        android:layout_height="50dp"
+        android:text="알람 설정"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/btn_alarm_apps"
+        android:backgroundTint="@null"
+        app:backgroundTint="@null"
+        android:stateListAnimator="@null"
+        android:elevation="20dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginTop="40dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

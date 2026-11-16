@@ -9,5 +9,7 @@
     <string name="app_version">My Life ver 1.3</string>
 
     <string name="nickname">Autumn</string>
-
+    <string name="accessibility_service_description">
+    앱 전환 버튼으로 최근 앱 화면을 실행합니다.
+</string>
 </resources>

@@ -1,27 +1,38 @@
-
 package com.mfm2000.mobile005
 
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Typeface
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
 import android.view.View
 import java.util.Calendar
+import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.sin
-import android.graphics.Typeface
-import kotlin.math.sin
-import kotlin.math.PI
 
 class AnalogClockView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
+
+    companion object {
+        private const val FRAME_INTERVAL = 16L
+
+        private const val NUMBER_SIZE = 0.23f
+        private const val NUMBER_DISTANCE = 0.72f
+
+        private const val HOUR_LENGTH = 0.48f
+        private const val MINUTE_LENGTH = 0.53f
+        private const val SECOND_LENGTH = 0.56f
+
+        private const val CENTER_RADIUS = 0.035f
+    }
 
     // 숫자 Paint
     private val numberPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -61,38 +72,32 @@ class AnalogClockView @JvmOverloads constructor(
         setShadowLayer(6f, 2f, 2f, Color.BLACK)
     }
 
+    private val calendar = Calendar.getInstance()
     private val handler = Handler(Looper.getMainLooper())
 
     private val clockRunnable = object : Runnable {
         override fun run() {
-
             invalidate()
-
-            //val delay =
-            //    1000L - (System.currentTimeMillis() % 1000L)
-
-            // handler.postDelayed(this, delay)
-            handler.postDelayed(this, 16L)
+            handler.postDelayed(this, FRAME_INTERVAL)
         }
     }
 
     override fun onDraw(canvas: Canvas) {
-
         super.onDraw(canvas)
 
         val cx = width / 2f
         val cy = height / 2f
-
         val radius = min(width, height) * 0.5f
 
-        // 숫자 크기 기존 대비 2배
-        numberPaint.textSize = radius * 0.23f
+        if (radius <= 0f) return
 
-        // 숫자 위치
-        val numberDistance = radius * 0.72f
+        // 숫자 크기 및 위치
+        numberPaint.textSize = radius * NUMBER_SIZE
+        val numberDistance = radius * NUMBER_DISTANCE
 
         // 현재 시간
-        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = System.currentTimeMillis()
+
         val second = calendar.get(Calendar.SECOND)
         val millisecond = calendar.get(Calendar.MILLISECOND)
 
@@ -102,24 +107,73 @@ class AnalogClockView @JvmOverloads constructor(
         // 현재 초에 해당하는 숫자
         val targetNumber = if (second == 0) 12 else second / 5
 
-        // 숫자 확대 애니메이션 (최대 2배)
+        // 숫자 확대 애니메이션
         val progress = (millisecond / 600f).coerceIn(0f, 1f)
-        val pulseScale = if (millisecond < 600 && second % 5 == 0) {
-            1f + sin(progress * PI).toFloat()
-        } else {
-            1f
-        }
 
-        // 숫자 표시
+        val pulseScale =
+            if (millisecond < 600 && second % 5 == 0) {
+                1f + sin(progress * PI).toFloat()
+            } else {
+                1f
+            }
+
+        // 시계 숫자 표시
+        drawNumbers(
+            canvas,
+            cx,
+            cy,
+            numberDistance,
+            targetNumber,
+            pulseScale
+        )
+
+        // 부드러운 시간 계산
+        val smoothSecond = second + millisecond / 1000f
+        val smoothMinute = minute + smoothSecond / 60f
+        val smoothHour = hour + smoothMinute / 60f
+
+        // 시계 바늘 각도
+        val hourAngle = Math.toRadians(smoothHour * 30.0 - 90.0)
+        val minuteAngle = Math.toRadians(smoothMinute * 6.0 - 90.0)
+        val secondAngle = Math.toRadians(smoothSecond * 6.0 - 90.0)
+
+        // 시침
+        drawHand(canvas, cx, cy, hourAngle, radius * HOUR_LENGTH, hourPaint)
+
+        // 분침
+        drawHand(canvas, cx, cy, minuteAngle, radius * MINUTE_LENGTH, minutePaint)
+
+        // 초침
+        drawHand(canvas, cx, cy, secondAngle, radius * SECOND_LENGTH, secondPaint)
+
+        // 중앙 축
+        canvas.drawCircle(
+            cx,
+            cy,
+            radius * CENTER_RADIUS,
+            centerPaint
+        )
+    }
+
+    // 시계 숫자 그리기
+    private fun drawNumbers(
+        canvas: Canvas,
+        cx: Float,
+        cy: Float,
+        distance: Float,
+        targetNumber: Int,
+        pulseScale: Float
+    ) {
         for (i in 1..12) {
+
             val angle = Math.toRadians((i * 30 - 90).toDouble())
 
-            val x = cx + numberDistance * kotlin.math.cos(angle).toFloat()
-            val y = cy + numberDistance * kotlin.math.sin(angle).toFloat()
+            val x = cx + distance * cos(angle).toFloat()
+            val y = cy + distance * sin(angle).toFloat()
 
-            val textY = y - (numberPaint.ascent() + numberPaint.descent()) / 2
+            val textY =
+                y - (numberPaint.ascent() + numberPaint.descent()) / 2f
 
-            // 해당 초의 숫자만 확대
             val scale = if (i == targetNumber) pulseScale else 1f
 
             canvas.save()
@@ -127,74 +181,27 @@ class AnalogClockView @JvmOverloads constructor(
             canvas.drawText(i.toString(), x, textY, numberPaint)
             canvas.restore()
         }
+    }
 
-        // 초 단위까지 반영
-        val smoothSecond = second + millisecond / 1000f
-
-        val smoothMinute = minute + smoothSecond / 60f
-
-        val smoothHour = hour + smoothMinute / 60f
-
-        // 시침 각도
-        val hourAngle = Math.toRadians(
-            smoothHour * 30.0 - 90.0
-        )
-
-        // 분침 각도
-        val minuteAngle = Math.toRadians(
-            smoothMinute * 6.0 - 90.0
-        )
-
-        // 초침 각도
-        val secondAngle = Math.toRadians(
-            smoothSecond * 6.0 - 90.0
-        )
-
-        // 시침 길이
-        val hourLength = radius * 0.48f
-
-        // 분침 길이
-        val minuteLength = radius * 0.53f
-
-        // 초침 길이
-        val secondLength = radius * 0.56f
-
-        // 시침
+    // 시계 바늘 공통 그리기
+    private fun drawHand(
+        canvas: Canvas,
+        cx: Float,
+        cy: Float,
+        angle: Double,
+        length: Float,
+        paint: Paint
+    ) {
         canvas.drawLine(
             cx,
             cy,
-            cx + cos(hourAngle).toFloat() * hourLength,
-            cy + sin(hourAngle).toFloat() * hourLength,
-            hourPaint
-        )
-
-        // 분침
-        canvas.drawLine(
-            cx,
-            cy,
-            cx + cos(minuteAngle).toFloat() * minuteLength,
-            cy + sin(minuteAngle).toFloat() * minuteLength,
-            minutePaint
-        )
-
-        // 초침
-        canvas.drawLine(
-            cx,
-            cy,
-            cx + cos(secondAngle).toFloat() * secondLength,
-            cy + sin(secondAngle).toFloat() * secondLength,
-            secondPaint
-        )
-
-        // 중앙 축
-        canvas.drawCircle(
-            cx,
-            cy,
-            radius * 0.035f,
-            centerPaint
+            cx + cos(angle).toFloat() * length,
+            cy + sin(angle).toFloat() * length,
+            paint
         )
     }
 
+    // 화면에 표시될 때 애니메이션 시작
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
 
@@ -202,9 +209,9 @@ class AnalogClockView @JvmOverloads constructor(
         handler.post(clockRunnable)
     }
 
+    // 화면에서 제거될 때 애니메이션 정지
     override fun onDetachedFromWindow() {
         handler.removeCallbacks(clockRunnable)
-
         super.onDetachedFromWindow()
     }
 }
