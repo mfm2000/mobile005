@@ -57,9 +57,10 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.2.1")
     implementation("androidx.core:core-splashscreen:1.0.1")
     implementation("com.github.usingsky:KoreanLunarCalendar:0.4.0")
+    implementation("androidx.activity:activity-ktx:1.9.0")
     // Glide
     implementation("com.github.bumptech.glide:glide:4.16.0")
-
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
     testImplementation("junit:junit:4.13.2")
 
     androidTestImplementation(

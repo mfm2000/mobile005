@@ -8,6 +8,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <!-- 배경 이미지 -->
     <ImageView
         android:id="@+id/bgImage"
         android:layout_width="0dp"
@@ -18,7 +19,20 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
-
+    <!-- 배경 이미지 전환용 보조 ImageView -->
+    <ImageView
+        android:id="@+id/bgImageNext"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
+        android:contentDescription="@null"
+        android:alpha="0"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+    <!-- 테두리 -->
     <View
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -29,7 +43,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- 시계 시작 위치: 화면 높이의 20% -->
+    <!-- 시계 시작 위치 -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guidelineClockTop"
         android:layout_width="wrap_content"
@@ -50,7 +64,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- 년주 및 양력/음력 날짜 표시 -->
+    <!-- 년주 및 날짜 표시 -->
     <LinearLayout
         android:id="@+id/dateContainer"
         android:layout_width="0dp"
@@ -67,7 +81,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_bias="0.5">
 
-        <!-- 한글(한자) 년주 -->
+        <!-- 년주 -->
         <TextView
             android:id="@+id/yearGapjaView"
             android:layout_width="match_parent"
@@ -81,7 +95,7 @@
             android:shadowDx="2"
             android:shadowDy="2" />
 
-        <!-- 양력 또는 음력 날짜 -->
+        <!-- 날짜 -->
         <TextView
             android:id="@+id/dateView"
             android:layout_width="match_parent"
@@ -94,6 +108,8 @@
             android:shadowRadius="6"
             android:shadowDx="2"
             android:shadowDy="2" />
+
+        <!-- 요일 -->
         <TextView
             android:id="@+id/weekdayView"
             android:layout_width="wrap_content"
@@ -102,6 +118,7 @@
             android:textSize="40sp"
             android:textColor="@android:color/white"
             android:gravity="center" />
+
     </LinearLayout>
 
     <!-- 디지털 시계 위치 -->
@@ -112,6 +129,7 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.80" />
 
+    <!-- 디지털 시계 -->
     <TextView
         android:id="@+id/textView1"
         android:layout_width="match_parent"
@@ -129,6 +147,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- 하단 위치 -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline90"
         android:layout_width="wrap_content"
@@ -136,6 +155,7 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.95" />
 
+    <!-- 이메일 -->
     <TextView
         android:id="@+id/mailAddress"
         android:layout_width="wrap_content"
@@ -147,6 +167,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- 앱 버전 -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline075"
         android:layout_width="wrap_content"
@@ -165,6 +186,7 @@
         app:layout_constraintBottom_toTopOf="@id/guideline075"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- 앱 닉네임 -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline15"
         android:layout_width="wrap_content"
@@ -201,5 +223,58 @@
         android:layout_marginTop="40dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 설정 아이콘: 화면 오른쪽 하단 -->
+    <ImageButton
+        android:id="@+id/btnSettings"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginEnd="28dp"
+        android:layout_marginBottom="28dp"
+        android:src="@android:drawable/ic_menu_preferences"
+        android:contentDescription="설정"
+        android:background="@android:color/transparent"
+        android:backgroundTint="@android:color/transparent"
+        android:tint="@android:color/white"
+        android:padding="8dp"
+        android:elevation="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+    <!-- 음악 선택 및 재생 아이콘: 화면 왼쪽 하단 -->
+    <ImageButton
+        android:id="@+id/btnMusic"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:layout_marginStart="28dp"
+        android:layout_marginBottom="28dp"
+        android:src="@android:drawable/ic_media_play"
+        android:contentDescription="음악 선택 및 재생"
+        android:background="@android:color/transparent"
+        android:backgroundTint="@android:color/transparent"
+        android:tint="@android:color/white"
+        android:padding="8dp"
+        android:elevation="12dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+    <!-- 이미지 선택 아이콘: Autumn 글자 아래 중앙 -->
+    <ImageButton
+        android:id="@+id/btnImages"
+        android:layout_width="42dp"
+        android:layout_height="42dp"
+        android:src="@android:drawable/ic_menu_gallery"
+        android:contentDescription="배경 이미지 선택"
+        android:background="@android:color/transparent"
+        android:backgroundTint="@android:color/transparent"
+        android:tint="@android:color/white"
+        android:scaleType="fitCenter"
+        android:padding="7dp"
+        android:elevation="12dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:layout_marginTop="5dp"
+        app:layout_constraintTop_toBottomOf="@id/appNickName"
+        app:layout_constraintStart_toStartOf="@id/appNickName"
+        app:layout_constraintEnd_toEndOf="@id/appNickName"
+        android:translationX="14dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
