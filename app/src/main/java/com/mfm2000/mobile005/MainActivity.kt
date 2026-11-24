@@ -5,8 +5,6 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.graphics.Typeface
-import android.graphics.drawable.BitmapDrawable
-import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.media.MediaPlayer
 import android.net.Uri
@@ -48,9 +46,6 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import kotlin.math.abs
-import android.graphics.Bitmap
-import android.graphics.Matrix
-import androidx.exifinterface.media.ExifInterface
 
 class MainActivity : AppCompatActivity() {
 
@@ -818,6 +813,8 @@ class MainActivity : AppCompatActivity() {
         )
 
         setContentView(R.layout.activity_main)
+        // 첫 번째 배경 이미지가 준비될 때까지 메인 화면 숨김
+        findViewById<View>(R.id.main).visibility = View.INVISIBLE
 
         handler.postDelayed({
             loading = false
@@ -1338,6 +1335,7 @@ class MainActivity : AppCompatActivity() {
 
     // 저장된 이미지 목록을 불러와 배경 구성
     // 기존 슬라이더를 정지한 뒤 저장된 이미지 목록으로 BackgroundSlider를 다시 생성한다.
+
     private fun reloadBackgroundImages() {
 
         val imageView = findViewById<ImageView>(R.id.bgImage)
@@ -1346,53 +1344,52 @@ class MainActivity : AppCompatActivity() {
         imageView.scaleType = ImageView.ScaleType.CENTER_CROP
         imageViewNext.scaleType = ImageView.ScaleType.CENTER_CROP
 
-        // 기존 슬라이더 정지
+        // 새 이미지가 로딩되는 동안 기존 배경 유지
         if (::slider.isInitialized) {
-            slider.stop()
+            slider.stop(preserveCurrentImage = true)
         }
 
-        // 저장된 이미지 로딩
-        val selectedImages = loadSelectedImages()
+        // 이미지 Bitmap을 생성하지 않고 URI 목록만 가져온다.
+        val selectedImages = loadSelectedImageSources()
 
         // 사용자 이미지가 없으면 기본 이미지 사용
-        val images: Array<Drawable> =
+        val images: List<BackgroundImageSource> =
             if (selectedImages.isNotEmpty()) {
-                selectedImages.toTypedArray()
+
+                selectedImages
+
             } else {
-                arrayOf(
-                    requireNotNull(
-                        androidx.core.content.ContextCompat.getDrawable(
-                            this,
-                            R.drawable.defaultimg1
-                        )
+
+                listOf(
+                    BackgroundImageSource.ResourceSource(
+                        R.drawable.defaultimg1
                     ),
-                    requireNotNull(
-                        androidx.core.content.ContextCompat.getDrawable(
-                            this,
-                            R.drawable.defaultimg2
-                        )
+                    BackgroundImageSource.ResourceSource(
+                        R.drawable.defaultimg2
                     )
                 )
             }
 
+        // 새로운 슬라이더 생성
         slider = BackgroundSlider(
+            this,
             images,
             imageView,
             imageViewNext,
             backgroundInterval,
             FADE_DURATION
-        )
+        ) {
+            // 첫 이미지 로딩 완료 후 메인 화면 표시
+            findViewById<View>(R.id.main).visibility = View.VISIBLE
+        }
 
         slider.start()
     }
 
-    // 저장된 이미지 URI를 Drawable 목록으로 변환
+    private fun loadSelectedImageSources():
+            List<BackgroundImageSource> {
 
-    // 저장된 이미지 URI를 읽고 화면 크기에 맞게 축소·회전 보정하여 Drawable 목록으로 반환한다.
-    private fun loadSelectedImages(): List<Drawable> {
-
-        val result = mutableListOf<Drawable>()
-        val validUris = mutableListOf<String>()
+        val result = mutableListOf<BackgroundImageSource>()
 
         val savedJson = prefs.getString(PREF_IMAGE_URIS, null)
             ?: return result
@@ -1403,80 +1400,36 @@ class MainActivity : AppCompatActivity() {
             return result
         }
 
-        // 현재 기기의 화면 픽셀 크기를 기준으로 이미지 디코딩 크기를 제한한다.
-        val targetWidth = resources.displayMetrics.widthPixels
-        val targetHeight = resources.displayMetrics.heightPixels
-
         for (i in 0 until jsonArray.length()) {
 
             val uriString = jsonArray.optString(i)
+
             if (uriString.isBlank()) continue
 
             try {
+
                 val uri = Uri.parse(uriString)
 
-                // 1. 원본 이미지 크기 확인
-                val bounds = BitmapFactory.Options().apply {
-                    inJustDecodeBounds = true
+                // 파일 접근 권한만 확인한다.
+                // Bitmap 디코딩은 여기서 하지 않는다.
+                contentResolver.openFileDescriptor(
+                    uri,
+                    "r"
+                )?.use {
+
+                    result.add(
+                        BackgroundImageSource.UriSource(uri)
+                    )
                 }
-
-                val boundsValid = contentResolver.openInputStream(uri)?.use {
-                    BitmapFactory.decodeStream(it, null, bounds)
-                    bounds.outWidth > 0 && bounds.outHeight > 0
-                } ?: false
-
-                if (!boundsValid) continue
-
-                // 2. 화면 크기에 맞는 이미지 축소 비율 계산
-                var sampleSize = 1
-
-                // 화면보다 지나치게 큰 원본은 메모리 사용량을 줄이도록 2의 배수로 축소한다.
-                while (
-                    bounds.outWidth / sampleSize > targetWidth * 2 ||
-                    bounds.outHeight / sampleSize > targetHeight * 2
-                ) {
-                    sampleSize *= 2
-                }
-
-                // 3. 축소된 이미지 로딩
-                val options = BitmapFactory.Options().apply {
-                    inSampleSize = sampleSize
-                }
-
-                val bitmap = contentResolver.openInputStream(uri)?.use {
-                    BitmapFactory.decodeStream(it, null, options)
-                } ?: continue
-
-                // EXIF 회전 정보에 따라 이미지 방향 보정
-                // 촬영 기기의 EXIF 방향 정보가 있으면 실제 표시 방향에 맞게 회전한다.
-                val correctedBitmap = correctExifRotation(uri, bitmap)
-
-                // 보정된 이미지로 Drawable 생성
-                result.add(BitmapDrawable(resources, correctedBitmap))
-
-                validUris.add(uriString)
 
             } catch (e: Exception) {
+
                 android.util.Log.e(
                     "ImagePicker",
-                    "이미지 로딩 실패: $uriString",
+                    "이미지 접근 실패: $uriString",
                     e
                 )
             }
-        }
-
-        // 4. 유효하지 않은 이미지 URI 정리
-        if (validUris.size != jsonArray.length()) {
-
-            val updatedJson = JSONArray()
-
-            validUris.forEach {
-                updatedJson.put(it)
-            }
-
-            prefs.edit()
-                .putString(PREF_IMAGE_URIS, updatedJson.toString())
-                .apply()
         }
 
         return result
@@ -1847,40 +1800,6 @@ class MainActivity : AppCompatActivity() {
             )
         } else {
             currentMusicIndex = 0
-        }
-    }
-
-    private fun correctExifRotation(uri: Uri, bitmap: Bitmap): Bitmap {
-        return try {
-            val inputStream = contentResolver.openInputStream(uri)
-                ?: return bitmap
-
-            val exif = inputStream.use {
-                ExifInterface(it)
-            }
-
-            val rotation = exif.rotationDegrees
-
-            if (rotation == 0) {
-                bitmap
-            } else {
-                val matrix = Matrix().apply {
-                    postRotate(rotation.toFloat())
-                }
-
-                Bitmap.createBitmap(
-                    bitmap,
-                    0,
-                    0,
-                    bitmap.width,
-                    bitmap.height,
-                    matrix,
-                    true
-                )
-            }
-        } catch (e: Exception) {
-            android.util.Log.e("ImageRotation", "EXIF 회전 보정 실패", e)
-            bitmap
         }
     }
 }
